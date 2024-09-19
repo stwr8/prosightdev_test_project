@@ -87,7 +87,7 @@ export function MapComponent() {
   }, [services]);
 
   return (
-    <div className="h-full p-10">
+    <div className="h-full p-4 md:p-10">
       <MapContainer
         ref={mapRef}
         center={[0, 0]}
@@ -110,9 +110,7 @@ export function MapComponent() {
             }
           >
             <Popup>
-              <div className="p-0 m-0 mb-4 text-xl font-medium">
-                {service.details}
-              </div>
+              <div className="p-0 m-0 mb-4 font-medium">{service.details}</div>
               <Button block onClick={() => setSelectedService(service)}>
                 Update
               </Button>
