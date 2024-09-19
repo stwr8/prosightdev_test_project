@@ -134,6 +134,7 @@ export function MapComponent() {
           <div className="mb-5">
             <Segmented
               block
+              size="large"
               value={selectedService?.status}
               onChange={(value) =>
                 setSelectedService((prev) => prev && { ...prev, status: value })
@@ -156,6 +157,7 @@ export function MapComponent() {
           </div>
           <TextArea
             required
+            size="large"
             placeholder="Enter details"
             className="mb-5"
             autoSize={{ minRows: 3, maxRows: 6 }}
