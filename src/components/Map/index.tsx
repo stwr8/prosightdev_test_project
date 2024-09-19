@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { Modal, Input, Button, Segmented } from "antd";
 import { Icon, LatLngBounds } from "leaflet";
@@ -20,28 +20,32 @@ interface IService {
 
 export function MapComponent() {
   const mapRef = useRef(null);
-
   const [selectedService, setSelectedService] = useState<IService | null>(null);
-  const [services, setServices] = useState(DEFAULT_DATA);
+  const [services, setServices] = useState<IService[]>(DEFAULT_DATA);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setSelectedService(null);
-  };
+  }, []);
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setServices((prev) =>
-      prev.map((s) =>
-        s.latitude === selectedService?.latitude &&
-        s.longitude === selectedService?.longitude
-          ? selectedService
-          : s
-      )
-    );
-    handleClose();
-  };
+  const handleSubmit = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      if (selectedService) {
+        setServices((prev) =>
+          prev.map((s) =>
+            s.latitude === selectedService.latitude &&
+            s.longitude === selectedService.longitude
+              ? selectedService
+              : s
+          )
+        );
+      }
+      handleClose();
+    },
+    [selectedService, handleClose]
+  );
 
-  const FitBounds = ({ services }: { services: Array<IService> }) => {
+  const FitBounds = useCallback(({ services }: { services: IService[] }) => {
     const map = useMap();
 
     useEffect(() => {
@@ -54,7 +58,7 @@ export function MapComponent() {
     }, [services, map]);
 
     return null;
-  };
+  }, []);
 
   return (
     <>
@@ -67,24 +71,24 @@ export function MapComponent() {
       >
         <TileLayer url="https://api.maptiler.com/maps/basic-v2/256/{z}/{x}/{y}.png?key=YxVZqW1sNTEZCr18teZw" />
         <FitBounds services={services} />
-        {services.map((el, idx) => (
+        {services.map((service) => (
           <Marker
-            key={idx}
-            position={[el.latitude, el.longitude]}
+            key={`${service.latitude}-${service.longitude}`}
+            position={[service.latitude, service.longitude]}
             icon={
               new Icon({
                 iconSize: [48, 48],
                 iconAnchor: [24, 54],
                 popupAnchor: [0, -58],
-                iconUrl: `/marker_${el.status ? "green" : "red"}_icon.png`,
+                iconUrl: `/marker_${service.status ? "green" : "red"}_icon.png`,
               })
             }
           >
             <Popup>
               <div className="p-0 m-0 mb-4 text-xl font-medium">
-                {el.details}
+                {service.details}
               </div>
-              <Button block onClick={() => setSelectedService(el)}>
+              <Button block onClick={() => setSelectedService(service)}>
                 Update
               </Button>
             </Popup>
@@ -104,9 +108,9 @@ export function MapComponent() {
             <Segmented
               block
               value={selectedService?.status}
-              onChange={(value) => {
-                setSelectedService((prev) => ({ ...prev!, status: value }));
-              }}
+              onChange={(value) =>
+                setSelectedService((prev) => prev && { ...prev, status: value })
+              }
               options={[
                 { icon: "/marker_green_icon.png", value: true },
                 { icon: "/marker_red_icon.png", value: false },
@@ -117,7 +121,7 @@ export function MapComponent() {
                       width={48}
                       height={48}
                       src={icon}
-                      alt="Green Marker Icon"
+                      alt={value ? "Green Marker Icon" : "Red Marker Icon"}
                     />
                   </div>
                 ),
@@ -131,12 +135,9 @@ export function MapComponent() {
             className="mb-5"
             autoSize={{ minRows: 3, maxRows: 6 }}
             value={selectedService?.details}
-            onChange={({ target }) => {
-              setSelectedService((prev) => ({
-                ...prev!,
-                details: target.value,
-              }));
-            }}
+            onChange={({ target: { value } }) =>
+              setSelectedService((prev) => prev && { ...prev, details: value })
+            }
           />
           <div className="flex gap-3 justify-end">
             <Button key="back" onClick={handleClose}>
