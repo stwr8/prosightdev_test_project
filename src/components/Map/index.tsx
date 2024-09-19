@@ -102,9 +102,9 @@ export function MapComponent() {
             position={[service.latitude, service.longitude]}
             icon={
               new Icon({
-                iconSize: [48, 48],
-                iconAnchor: [24, 54],
-                popupAnchor: [0, -58],
+                iconSize: [32, 32],
+                iconAnchor: [16, 37],
+                popupAnchor: [0, -38],
                 iconUrl: MARKER_ICONS[`${service.status}`],
               })
             }
@@ -138,8 +138,8 @@ export function MapComponent() {
                 label: (
                   <Image
                     key={index}
-                    width={48}
-                    height={48}
+                    width={32}
+                    height={32}
                     src={MARKER_ICONS[`${value}`]}
                     alt={value ? "Green Marker Icon" : "Red Marker Icon"}
                     className="my-3 mx-auto grid place-items-center"
