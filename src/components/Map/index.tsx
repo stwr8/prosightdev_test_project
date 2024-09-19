@@ -1,15 +1,26 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { Modal, Input, Button, Segmented } from "antd";
 import { Icon, LatLngBounds } from "leaflet";
+
+import MarkerGreenIcon from "@/assets/images/marker_green_icon.png";
+import MarkerRedIcon from "@/assets/images/marker_red_icon.png";
 
 import { DEFAULT_DATA } from "./data";
 
 import "leaflet/dist/leaflet.css";
 
 const { TextArea } = Input;
+
+const DEFAULT_ZOOM = 9;
+const LOCAL_STORAGE_KEY = "service-data";
+
+const MARKER_ICONS = {
+  true: MarkerGreenIcon.src,
+  false: MarkerRedIcon.src,
+} as const;
 
 interface IService {
   latitude: number;
@@ -18,34 +29,45 @@ interface IService {
   details: string;
 }
 
+const loadServices = (): IService[] => {
+  if (typeof window !== "undefined") {
+    const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    return storedData ? JSON.parse(storedData) : DEFAULT_DATA;
+  }
+  return DEFAULT_DATA;
+};
+
+const saveServices = (services: IService[]) => {
+  if (typeof window !== "undefined") {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(services));
+  }
+};
+
 export function MapComponent() {
   const mapRef = useRef(null);
   const [selectedService, setSelectedService] = useState<IService | null>(null);
-  const [services, setServices] = useState<IService[]>(DEFAULT_DATA);
+  const [services, setServices] = useState<IService[]>(loadServices());
 
-  const handleClose = useCallback(() => {
+  const handleClose = () => {
     setSelectedService(null);
-  }, []);
+  };
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      if (selectedService) {
-        setServices((prev) =>
-          prev.map((s) =>
-            s.latitude === selectedService.latitude &&
-            s.longitude === selectedService.longitude
-              ? selectedService
-              : s
-          )
-        );
-      }
-      handleClose();
-    },
-    [selectedService, handleClose]
-  );
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (selectedService) {
+      setServices((prev) =>
+        prev.map((service) =>
+          service.latitude === selectedService.latitude &&
+          service.longitude === selectedService.longitude
+            ? selectedService
+            : service
+        )
+      );
+    }
+    handleClose();
+  };
 
-  const FitBounds = useCallback(({ services }: { services: IService[] }) => {
+  const FitBounds = ({ services }: { services: IService[] }) => {
     const map = useMap();
 
     useEffect(() => {
@@ -58,16 +80,19 @@ export function MapComponent() {
     }, [services, map]);
 
     return null;
-  }, []);
+  };
+
+  useEffect(() => {
+    saveServices(services);
+  }, [services]);
 
   return (
-    <>
+    <div className="h-full p-10">
       <MapContainer
         ref={mapRef}
-        zoom={9}
         center={[0, 0]}
-        zoomControl={false}
-        style={{ height: "100%", width: "100%" }}
+        zoom={DEFAULT_ZOOM}
+        className="h-full w-full rounded-2xl"
       >
         <TileLayer url="https://api.maptiler.com/maps/basic-v2/256/{z}/{x}/{y}.png?key=YxVZqW1sNTEZCr18teZw" />
         <FitBounds services={services} />
@@ -80,7 +105,7 @@ export function MapComponent() {
                 iconSize: [48, 48],
                 iconAnchor: [24, 54],
                 popupAnchor: [0, -58],
-                iconUrl: `/marker_${service.status ? "green" : "red"}_icon.png`,
+                iconUrl: MARKER_ICONS[`${service.status}`],
               })
             }
           >
@@ -111,19 +136,16 @@ export function MapComponent() {
               onChange={(value) =>
                 setSelectedService((prev) => prev && { ...prev, status: value })
               }
-              options={[
-                { icon: "/marker_green_icon.png", value: true },
-                { icon: "/marker_red_icon.png", value: false },
-              ].map(({ icon, value }) => ({
+              options={[true, false].map((value, index) => ({
                 label: (
-                  <div className="py-3 grid place-items-center">
-                    <Image
-                      width={48}
-                      height={48}
-                      src={icon}
-                      alt={value ? "Green Marker Icon" : "Red Marker Icon"}
-                    />
-                  </div>
+                  <Image
+                    key={index}
+                    width={48}
+                    height={48}
+                    src={MARKER_ICONS[`${value}`]}
+                    alt={value ? "Green Marker Icon" : "Red Marker Icon"}
+                    className="my-3 mx-auto grid place-items-center"
+                  />
                 ),
                 value,
               }))}
@@ -149,6 +171,6 @@ export function MapComponent() {
           </div>
         </form>
       </Modal>
-    </>
+    </div>
   );
 }

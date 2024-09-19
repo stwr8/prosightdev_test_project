@@ -7,9 +7,5 @@ const MapComponent = dynamic(
 );
 
 export default function Home() {
-  return (
-    <div className="h-full p-10">
-      <MapComponent />
-    </div>
-  );
+  return <MapComponent />;
 }
