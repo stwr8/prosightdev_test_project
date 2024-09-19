@@ -94,7 +94,10 @@ export function MapComponent() {
         zoom={DEFAULT_ZOOM}
         className="h-full w-full rounded-2xl"
       >
-        <TileLayer url="https://api.maptiler.com/maps/basic-v2/256/{z}/{x}/{y}.png?key=YxVZqW1sNTEZCr18teZw" />
+        <TileLayer
+          url="https://api.maptiler.com/maps/basic-v2/256/{z}/{x}/{y}.png?key=YxVZqW1sNTEZCr18teZw"
+          attribution="Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2012 CloudMade"
+        />
         <FitBounds services={services} />
         {services.map((service) => (
           <Marker
@@ -105,6 +108,7 @@ export function MapComponent() {
                 iconSize: [32, 32],
                 iconAnchor: [16, 37],
                 popupAnchor: [0, -38],
+                iconRetinaUrl: MARKER_ICONS[`${service.status}`],
                 iconUrl: MARKER_ICONS[`${service.status}`],
               })
             }
@@ -140,8 +144,9 @@ export function MapComponent() {
                     key={index}
                     width={32}
                     height={32}
-                    src={MARKER_ICONS[`${value}`]}
-                    alt={value ? "Green Marker Icon" : "Red Marker Icon"}
+                    unoptimized
+                    src={value ? MarkerGreenIcon : MarkerRedIcon}
+                    alt={value ? "Marker Green Icon" : "Marker Red Icon"}
                     className="my-3 mx-auto grid place-items-center"
                   />
                 ),
